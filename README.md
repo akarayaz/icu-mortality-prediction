@@ -48,8 +48,7 @@ ICU Mortality Prediction/
     ├── 00_data_collection.ipynb          # Overview of data collection
     ├── 00_data_collection_eICU.ipynb     # Feature extraction from eICU
     ├── 00_data_collection_MIMIC.ipynb    # Feature extraction from MIMIC-III
-    ├── 01_data_exploration.ipynb         # EDA version Sara
-    ├── 01_data_exploration_02.ipynb      # EDA version Kimia
+    ├── 01_data_exploration_02.ipynb      # EDA
     └── 02_data_preprocessing.ipynb       # Imputation, encoding, feature alignment
 ```
 
@@ -59,7 +58,7 @@ ICU Mortality Prediction/
 
 ```
 00_data_collection_eICU   ──┐
-                             ├──► 01_data_exploration_02 ──► 02_data_preprocessing
+                             ├──► 01_data_exploration_02 ──► 02_data_preprocessing ──► 03_model selection
 00_data_collection_MIMIC  ──┘
 ```
 
