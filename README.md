@@ -32,24 +32,31 @@ The two datasets differ substantially in case mix, base mortality rate, and miss
 
 ## Key findings
 
-- **The generalization gap is real**: internal (eICU) performance is noticeably higher than external (MIMIC) performance — expected given the case-mix and prevalence differences between the two cohorts.
-- **Missingness pattern shift is the biggest driver**, not feature distribution shift. Blood pressure is measured in eICU only ~16% of the time vs ~97% in MIMIC — the model never learned to use it, so MIMIC's real BP signal is wasted.
-- **Label shift correction (prevalence re-calibration) is the simplest and most reliable fix.** More elaborate domain adaptation didn't help further:
-  - Importance weighting collapsed to near-uniform weights (domain classifier AUC ≈ 1.0 — the two cohorts are *too* separable for density-ratio weighting to work).
-  - CORAL alignment reduced covariance distance substantially but didn't improve AUC — confirming the gap isn't about feature distribution shape.
-- All bootstrap confidence intervals across methods overlap — no method significantly beats the label-shift-corrected baseline on this external test set.
+- **The generalization gap is real**: the RF baseline reaches AUC 0.826 on the eICU validation split but only 0.734 on MIMIC — expected given the large prevalence gap (5% vs 34% mortality) and case-mix differences between the two cohorts.
+- **Label shift correction (prevalence re-calibration) is the simplest and most reliable fix**, and it's doing essentially all of the useful work here. More elaborate domain adaptation didn't help further:
+  - **Importance weighting** collapsed to near-uniform weights — the domain classifier separating eICU from MIMIC reached AUC 1.000 (near-perfect), so the resulting weights had an effective sample size of 2,009 out of 2,016 (99.7% retention) — i.e. essentially no reweighting happened.
+  - **CORAL** alignment reduced the covariance distance between eICU and MIMIC by ~100% but MIMIC AUC didn't improve (0.733 vs 0.734 baseline) — confirming the gap isn't about feature distribution *shape*.
+  - Combining CORAL with importance weighting *hurt* performance slightly (AUC 0.715).
+- **Simpler isn't better here**: LR-L1/L2 had higher validation AUC (0.857–0.861 vs RF's 0.826) but *lower* MIMIC AUC (0.708–0.719) — the RF generalizes better despite being outperformed internally.
+- **Dropping the highest-missingness features (BP/INR) didn't help** (MIMIC AUC 0.726, essentially unchanged) — removing features the model barely learned from doesn't unlock signal it never had.
+- All bootstrap 95% CIs overlap across every method tested — none is statistically distinguishable from the label-shift-corrected baseline on this external test set (n=136).
+- Subgroup analysis shows the model is weakest on SICU patients (AUC 0.675, n=34) and strongest on Respiratory admissions (AUC 0.875, n=19) — though sample sizes are small enough that these should be read as directional, not definitive.
 
 ## Results
 
-*(fill in with your final run's numbers)*
+All figures are on the **MIMIC-III external test set (n=136, 34% mortality)**, after label-shift correction. Sens/Spec use per-method thresholds tuned on the eICU validation set (Youden's J, shifted via the same log-odds transform) rather than one threshold borrowed from the RF baseline — see notebook 07 for why that distinction matters here.
 
-| Method | Val AUC | MIMIC AUC | MIMIC Sens | MIMIC Spec |
-|---|---|---|---|---|
-| RF calibrated + label shift (baseline) | | | | |
-| LR-L1 (sparse) + label shift | | | | |
-| RF, no BP/INR features + label shift | | | | |
-| CORAL + label shift | | | | |
-| CORAL + importance weighting + label shift | | | | |
+| Method | Val AUC | MIMIC AUC (95% CI) | MIMIC PR-AUC | MIMIC Sens | MIMIC Spec |
+|---|---|---|---|---|---|
+| RF calibrated + label shift (baseline) | 0.826 | 0.734 (0.642–0.819) | 0.642 | 0.435 | 0.867 |
+| + Importance weighting + label shift | 0.829 | 0.734 (0.645–0.817) | 0.642 | 0.435 | 0.878 |
+| LR-L2 + label shift | 0.857 | 0.719 (0.619–0.811) | 0.621 | 0.478 | 0.844 |
+| LR-L1 (sparse) + label shift | 0.861 | 0.708 (0.613–0.799) | 0.615 | 0.739 | 0.478 |
+| RF, no BP/INR features + label shift | 0.834 | 0.726 (0.632–0.809) | 0.638 | 0.457 | 0.822 |
+| CORAL + label shift | 0.814 | 0.733 (0.641–0.815) | 0.629 | 0.478 | 0.844 |
+| CORAL + importance weighting + label shift | 0.824 | 0.715 (0.616–0.810) | 0.635 | 0.326 | 0.933 |
+
+**Bottom line:** none of the domain adaptation techniques beat plain label-shift correction. That's a legitimate, useful negative result — it says the RF baseline's 0.734 external AUC is close to the practical ceiling for this feature set and sample size, not that more exotic methods weren't tried.
 
 ## Repo structure
 
