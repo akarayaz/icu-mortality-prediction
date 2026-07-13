@@ -1,0 +1,28 @@
+# Raw and derived data — never commit (PhysioNet license forbids redistribution)
+data/eicu_raw/
+data/mimic_3_raw/
+data/output_data/
+*.csv
+*.csv.gz
+
+# Trained models and pickled objects
+models/
+*.pkl
+*.npy
+
+# Generated figures/exports
+documents/
+
+# Jupyter/Colab
+.ipynb_checkpoints/
+*checkpoint*
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS/editor
+.DS_Store
+.vscode/
